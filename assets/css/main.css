@@ -53,7 +53,7 @@ input:focus {outline: none; }
     width:100%;
     height:100%;
     background-image: url("./images/icon/home_bg.png");
-    z-index:1;
+    z-index:2;
     opacity:1;
     position:absolute;
     background-size: 100% auto;
@@ -64,7 +64,7 @@ input:focus {outline: none; }
     width:70%;
     top:7%;
     left:15%;
-    z-index:2;
+    z-index:2;/*2*/
 
     
 }
@@ -91,6 +91,103 @@ input:focus {outline: none; }
     background-size: 100% 100%;
     z-index:2;
 }
+#settings-page{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-color:lightgrey;
+    text-align:center;
+    box-sizing:border-box;
+    padding: 30% 20% 30% 20%;
+    z-index:3;
+    visibility:hidden;  
+    opacity:0; 
+}
+    #settings-page h1{
+        color:#0c9b93;
+        font-size:1.5em;
+    }
+    #settings-page span{
+        border-radius:20%;
+        background-size: 100% 100%;
+    }
+    
+        #settings-page span:hover{
+            box-shadow: 0px 0px 0px 3px #0c9b93;     
+        }
+
+    #settings-page span:nth-child(2){
+        width:45%;
+        display:inline-block;
+        padding-top:33%;
+        box-sizing:border-box;
+        
+        background-image:url("./images/icon/ring.png");
+    }
+    #settings-page span:nth-child(3){
+        width:45%;
+        display:inline-block;
+        padding-top:33%;
+        background-image:url("./images/icon/vibrate.png");
+        margin-left:6%;
+        box-sizing:border-box;
+    }
+    #settings-back{
+        margin-top:8%;
+        width:100%;
+        height:12%;
+        display:table;
+        background-color:#0c9b93;
+        border-radius:10px;
+        line-height:100%;
+        vertical-align:middle;
+    }
+    #settings-back h1{
+        color:white;
+        height:100%;
+        line-height:100%;
+        display:table-cell; 
+        vertical-align:middle;
+        text-align:center
+    }
+
+#marker-descrip{
+    width:70%;
+    position:absolute;
+    top:20%;
+    left:15%;
+    box-sizing:border-box;
+    z-index:3;
+    visibility:hidden;  
+    opacity:0; 
+}
+#descrip-txt{
+    width:100%;
+    height:60%;
+    display:block;
+    margin-bottom:5%;
+    resize: none;
+}
+
+    #marker-descrip span{
+        width:45%;
+        display:inline-block;
+        padding-top:14%;
+        box-sizing:border-box;
+        color:white;
+        background-size:100%;
+        position:relative;
+    }
+    #marker-descrip span:nth-child(2){       
+        background-image:url("./images/icon/submit_failed.png");
+        left:0%;
+    }
+    #marker-descrip span:nth-child(3){
+        background-image:url("./images/icon/cancel_failed.png");
+        left:10%;
+    }
+
+
 #reminders{
     width:10%;
     position:absolute;
@@ -129,5 +226,5 @@ input:focus {outline: none; }
 #map{
     height:100%;
     width:100%;
-    z-index:-1;
+    z-index:1;/*-1*/
 }
