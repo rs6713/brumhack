@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Location Reminder Application</title>
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+    <script type="text/javascript" src="./assets/scripts/main.js"> </script>
+  </head>
+  <body>
+      <!--Main frame center page-->
+      <div id="phone-frame">
+          
+          <!--Contains map-->
+          <div id="main">
+            <!--Header contains dummy phone display -->
+            <div id="header">
+                <span>Buttons</span>
+                <span>9:00AM</span>
+                <span>Battery</span>
+            </div>
+
+            <!--Settings Button-->
+            <div id="settings-button"></div>
+
+            <!--Form for location submission-->
+            <form id="location-form">  
+                <input type="text" name="location" id="location-in" placeholder="Search"><br>    
+            </form>
+         
+            
+            <!--Buttons to interact with map-->
+            <div id="draw"></div>
+            <div id="compass"></div>
+
+            <!-- Default overlay map background-->
+            <div id="def-bg" tabindex="1"></div>
+
+            <!-- Settings Page-->
+            <div id="settings-page">
+                <h1>Setting</h1>
+                <div id="settings-options">
+                    <span></span><!--Music-->
+                    <span></span><!--Vibrate-->
+                </div>
+                <div id="settings-back"></div>
+            </div>
+
+            <!--Main map interactive object-->
+            <div id="map"></div>
+            
+          </div>
+      </div>
+
+    <!--Script to access jquery, map interface, our custom script-->
+
+    
+        
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsl-5Vgr02IGF58MxqOR3ZfLmS03v8cdY&callback=initMap">
+    </script>
+
+  </body>
+</html>
