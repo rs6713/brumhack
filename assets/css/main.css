@@ -85,6 +85,8 @@ input:focus {outline: none; }
     background-color:red;
     outline: solid 2px black;
     transform-origin: 50% 50%;
+    opacity:0;
+    visibility:hidden;
 }
 #canvas{
     position:absolute;
@@ -253,3 +255,42 @@ input:focus {outline: none; }
     width:100%;
     z-index:1;/*-1*/
 }
+
+#reminders-page{
+    width:70%;
+    height:80%;
+    position:absolute;
+    top:20%;
+    left:15%;
+    box-sizing:border-box;
+    z-index:3;
+    visibility:hidden;  
+    opacity:0; 
+}
+#reminders-txt{
+    width:100%;
+    height:60%;
+    display:block;
+    margin-bottom:5%;
+    resize: none;
+    border-radius:10px;
+    background-color:white;
+}
+
+    #reminders-page span{
+        width:45%;
+        display:inline-block;
+        padding-top:14%;
+        box-sizing:border-box;
+        color:white;
+        background-size:100%;
+        position:relative;
+    }
+    #reminders-page span:nth-child(2){       
+        background-image:url("./images/icon/later.png");
+        left:0%;
+    }
+    #reminders-page span:nth-child(3){
+        background-image:url("./images/icon/complete.png");
+        left:10%;
+    }

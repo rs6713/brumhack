@@ -8,17 +8,20 @@
 //Default distance slidey bar
 //dont need indexes to associate map markers and list markers, associate through location
 //bug so right text comes up when click on marker
+var addLocationFlag=false;
 var OFF=0;
 var ON=1;
 var ENTER=13;
 var defaultDistance=1;
 var gestures=[];
 var currMarker;
+var nearbyLocations=[];
 
-    function locationReminder(lat, lng, descrip, radius){
+    function locationReminder(lat, lng, descrip, radius, idx){
         this.lat=lat;
         this.lng=lng;
         this.descrip=descrip;
+        this.idx=idx; //Needed to delete location
         this.radius=radius; //radius can be empty/set, default can be set
     }
     var locationList=[];
@@ -31,7 +34,7 @@ var currMarker;
     var map;
     var marker;
     var initMap;
-
+    var delayedReminders=[];
 
 
 /*
@@ -70,16 +73,7 @@ request.send(postData);
 // Otherwise, it'll block ALL execution waiting for server response.
 var async = true;
 */
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-        console.log( "Geolocation is not supported by this browser.");
-    }
 
-function showPosition(position) {
-    console.log( position.coords.latitude + position.coords.longitude);
-   
-}
 
 
 
@@ -101,7 +95,7 @@ $.fn.toggleClick = function(){
     });
 };
 
-
+var markers = [];
         var addMarkDescription=function(lat, lng, index){
             console.log("mark clicked");
             var descrip="";
@@ -117,7 +111,7 @@ $.fn.toggleClick = function(){
                 var textval=$('textarea#descrip-txt').val();
                 console.log(textval);
                 if(textval!=""){
-                    var loc=new locationReminder(lat, lng, textval, defaultDistance);
+                    var loc=new locationReminder(lat, lng, textval, null, markers.length);
                     locationList.push(loc);
                     $('#marker-descrip').css("visibility","hidden");
                     $('#marker-descrip').fadeTo( "slow", 0.0 ); 
@@ -132,6 +126,8 @@ $.fn.toggleClick = function(){
     $(document).ready(function () {
         var c=document.getElementById("canvas");
         var ctax=c.getContext("2d");
+        c.width  = 340;
+        c.height = 520; 
 
         initMap =function() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -195,7 +191,7 @@ $.fn.toggleClick = function(){
           });
           markers = [];
 */
-        var markers = [];
+        
         // Listen for the event fired when the user selects a prediction and retrieve
         // more details for that place.
         searchBox.addListener('places_changed', function() {
@@ -308,13 +304,17 @@ $.fn.toggleClick = function(){
 
         //Handles draw click
         $("#draw").click(function(){
+            addLocationFlag=true;
            document.getElementById("map").style.cursor = "pointer";
            console.log("draw clicked");
-           $('#map-overlay').css("visibility", "visible");
-           $("#map-overlay").click(function(){
+           //$('#map-overlay').css("visibility", "visible");
+           $("#canvas").css("visibility", "visible");
+           $("#canvas").fadeTo("slow", 1.0);
+           $("#canvas").mousedown(function(){
                console.log("sup");
                 var x = (event.clientX);
                 var y=(event.clientY); 
+                
                 var bounds = map.getBounds();
                 var ne = bounds.getNorthEast(); // LatLng of the north-east corner
                 var sw = bounds.getSouthWest(); // LatLng of the south-west corder
@@ -325,18 +325,55 @@ $.fn.toggleClick = function(){
 
                 var gestures=[];
 
-                $("#canvas").css("visibility", "visible");
+                
                 //origin x and y in terms of canvas
                 var origin_x= ((currMarker.lat()-sw.lat())/map_width)*canvas.width;
                 var origin_y= ((currMarker.lng()-ne.lng())/map_height)*canvas.height;
+                console.log("x origin"+x+"y origin" + y);
                 var lefty=origin_x*(document.getElementById('map-overlay').clientWidth/canvas.width);
                 var toppy=origin_y*(document.getElementById('map-overlay').clientHeight/canvas.height);
                 console.log("toppy"+document.getElementById('map-overlay').clientWidth);
                 console.log("lefty"+document.getElementById('map-overlay').clientHeight);
                 $("#red-dot").css("left",lefty+"px");
                 $("#red-dot").css("top",toppy+"px");
-
-
+                 $("#canvas").mouseup(function(){
+                    
+                    var x_new = (event.clientX)- $("#map-overlay").offset().left;
+                    var y_new=(event.clientY)- $("#map-overlay").offset().top;  
+                    console.log("x new"+x_new+"y new" + y_new);
+                    var x_map=(x_new/pg_width*map_width)+sw.lat();
+                    var y_map=(y_new/pg_height*map_height)+ne.lng();
+                    var mapRadius=Math.sqrt(Math.pow((currMarker.lat()-x_map) ,2.0)+   Math.pow((currMarker.lng()-y_map) ,2.0));
+                    console.log("mapradius"+ mapRadius);
+                    var radiusy= Math.sqrt(Math.pow((origin_x-x_new) ,2.0)+   Math.pow((origin_y-y_new) ,2.0));
+                    ctax.clearRect(0, 0, ctax.canvas.width, ctax.canvas.height);
+                    ctax.beginPath();
+                    //ctax.moveTo(origin_x,origin_y);//origin x and y are in canvas
+                    ctax.arc(origin_x,origin_y,radiusy,0,2*Math.PI);
+                    ctax.strokeStyle="#2BEEA0";
+                    ctax.lineWidth = 5;
+                    ctax.stroke();
+                    console.log("radius "+ radiusy);
+                    console.log("canvas width:" + canvas.width);
+                    console.log( "canvas height:" + canvas.height);
+                    for(var i=0; i<locationList.length; i++){
+                        if(locationList[i].lat()==currMarker.lat() && locationList[i].lng()==currMarker.lng() ){
+                            console.log("adding radius to"+ i)
+                            locationList[i].radius=mapRadius;
+                        }else{
+                            console.log(locationList[i].lat());
+                            console.log(currMarker.lat());
+                            console.log("diff =" + (locationList[i].lat()-currMarker.lat()) )
+                        }
+                    }
+                    $("#compass").click(function(){
+                        $("#canvas").fadeTo("slow", 0.0);
+                        ctax.clearRect(0, 0, ctax.canvas.width, ctax.canvas.height);
+                        $("#canvas").css("visibility", "hidden");
+                        addLocationFlag=false;
+                    });
+                 });
+/*
                 var sup=document.getElementById('map-overlay');//map-overlay
                 var reg=document.getElementById('map-overlay');
                 var canvasRegion = new ZingTouch.Region(reg);
@@ -362,7 +399,7 @@ $.fn.toggleClick = function(){
                     ctax.lineTo(x,y); 
                     ctax.stroke();
                 });
-               
+           */    
 /*          
                 for(var i=0; i<gestures.length;i++){
                     console.log("omg");
@@ -394,6 +431,77 @@ $.fn.toggleClick = function(){
             });
 
         });
+        //Function gets persons location, shows on map, calculates if within radius
+        
+        function geoPosition(personPos) {
+            console.log( personPos.coords.latitude + personPos.coords.longitude);
+            var posy={lat: personPos.coords.latitude,lng:personPos.coords.longitude};
+            marker = new google.maps.Marker({
+                position: posy,
+                map: map,
+                icon: "./assets/css/images/icon/location.png"
+            });
+            for(var i=0; i<locationList.length;i++){
+               // console.log( locationList[i].lat + locationList[i].lng );
+               if(locationList[i].radius!=null){
+                   console.log("radius"+locationList[i].radius );
+                    if((Math.pow((posy.lat-locationList[i].lat()),2.0) + Math.pow((posy.lng-locationList[i].lng()),2.0))< Math.pow(locationList[i].radius,2.0)){
+                        nearbyLocations=locationList[i];
+                        $('#reminders-txt').text(locationList[i].descrip);
+                        
+                        $('#reminders-page').css("visibility","visible");
+                        $('#reminders-page').fadeTo("slow",1.0);
+                        //later
+                        $("#reminders-page span:nth-child(2)").click(function() {
+                            var d = new Date();
+                            delayedReminders.push([locationList[i], d.getTime()]);
+                            $('#reminders-page').fadeTo("slow",0.0);
+                            $('#reminders-page').css("visibility","hidden");
+                            console.log(locationList);
+                            console.log(nearbyLocations);
+                            markers[nearbyLocations.idx-1].setMap(null);
+                            locationList.splice(i-1, 1);
+                           
+                            return;
+                        });
+
+                        //complete
+                        $("#reminders-page span:nth-child(3)").click(function(i) {
+                            $('#reminders-page').fadeTo("slow",0.0);
+                            $('#reminders-page').css("visibility","hidden");
+                            console.log(locationList[0].LocationReminder);
+                            console.log(nearbyLocations.idx);
+                            markers[nearbyLocations.idx-1].setMap(null);
+                            locationList.splice(i-1, 1);
+                            
+                            return;
+                        });
+
+
+                    }
+               } 
+            }
+        
+        }
+        //set to 10 minuts ==10 for remidners
+        setInterval(function(){ 
+                console.log("checking location");
+                var d = new Date();
+                if(!addLocationFlag){
+                    for(var i=0; i<delayedReminders.length;i++){
+                        if(d.getTime()-delayedReminders[i][1]>10){//600
+                            console.log("its been 10 secs");
+                            geoPosition(delayedReminder[i][0]);
+                            
+                        }
+                    }
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(geoPosition);
+                    } else {
+                        console.log( "Geolocation is not supported by this browser.");
+                    }
+                }
+        }, 5000);
     });
 
 
