@@ -18,6 +18,7 @@
           <div id="main">
             <!-- Default overlay map background-->
             <div id="def-bg" tabindex="1"></div>
+            <canvas id="canvas"  ></canvas>
             <!--Header contains dummy phone display -->
             <div id="header">
                 <span>Buttons</span>
@@ -37,7 +38,7 @@
             <!--Buttons to interact with map-->
             <div id="draw"></div>
             <div id="compass"></div>
-
+            <div id="red-dot"></div>
 
 
 
@@ -55,16 +56,17 @@
                 <span id="marker-submit"></span> <!-- submit -->
                 <span id="marker-cancel"></span> <!-- cancel -->
             </div>
-
+            <div id="map-overlay"></div>
             <!--Main map interactive object-->
+
             <div id="map"></div>
-            
+
           </div>
       </div>
 
     <!--Script to access jquery, map interface, our custom script-->
 
-    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/zingtouch/1.0.5/zingtouch.min.js'></script>
     <script type="text/javascript" src="./assets/scripts/main.js"> </script> 
  
     <script async defer

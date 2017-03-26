@@ -1,13 +1,19 @@
+//import ZingTouch from '../../zingtouch-master/src/ZingTouch.js'
+
+
 //Logo Color: #0c9b93
 //Could later add redundancy so if list input already exists only edit list element with value already in text area
 //also at some point need to add bin
 //bug that placeholders arent updated and that can submit with empty string
 //Default distance slidey bar
 //dont need indexes to associate map markers and list markers, associate through location
+//bug so right text comes up when click on marker
 var OFF=0;
 var ON=1;
 var ENTER=13;
 var defaultDistance=1;
+var gestures=[];
+var currMarker;
 
     function locationReminder(lat, lng, descrip, radius){
         this.lat=lat;
@@ -25,6 +31,60 @@ var defaultDistance=1;
     var map;
     var marker;
     var initMap;
+
+
+
+/*
+var url = "https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyAzxxzSteI3jvI8JA9BbxtnB0YTB7B77_Q";
+var method = "POST";
+var postData =  { "wifiAccessPoints": [
+                    // See the WiFi Access Point Objects section below.
+                    {
+                        "macAddress": "1A-D2-24-40-B3-D0",
+                        "signalStrength": -43,
+                        "age": 0,
+                        "channel": 11,
+                        "signalToNoiseRatio": 0
+                    }
+                ]};
+var async = true;
+
+var request = new XMLHttpRequest();
+request.onload = function () {
+   var status = request.status; // HTTP response status, e.g., 200 for "200 OK"
+   var data = request.responseText; // Returned data, e.g., an HTML document.
+   console.log(data);
+}
+
+request.open(method, url, async);
+
+request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+// Or... request.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+// Or... whatever
+
+// Actually sends the request to the server.
+request.send(postData);
+
+
+// You REALLY want async = true.
+// Otherwise, it'll block ALL execution waiting for server response.
+var async = true;
+*/
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+        console.log( "Geolocation is not supported by this browser.");
+    }
+
+function showPosition(position) {
+    console.log( position.coords.latitude + position.coords.longitude);
+   
+}
+
+
+
+
+
 
 $.fn.toggleClick = function(){
     var methods = arguments, // store the passed arguments for future reference
@@ -70,6 +130,9 @@ $.fn.toggleClick = function(){
         }
 
     $(document).ready(function () {
+        var c=document.getElementById("canvas");
+        var ctax=c.getContext("2d");
+
         initMap =function() {
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 10,
@@ -85,6 +148,29 @@ $.fn.toggleClick = function(){
                     featureType: 'road',
                     elementType: 'geometry',
                     stylers: [{color: '#FFFFFF'}]
+                    },
+                    {
+                    featureType: 'road.highway',
+                    elementType: 'geometry',
+                    stylers: [{color: '#A1C5D4'}]
+                     },
+                
+                    {
+                    featureType: 'transit',
+                    elementType: 'labels.text',
+                    stylers: [{color: '#15749C'}]
+                    }
+                
+                /*,
+                    {
+                        featureType: "road",
+                        elementType: "labels.icon",
+                     stylers: [{color: '#D286D4'}]
+                    }*/,
+                    {
+                        featureType: "road",
+                        elementType: "labels.text",
+                     stylers: [{color: '#FFFFFF'}]
                     }
                 ]
             });
@@ -149,6 +235,7 @@ $.fn.toggleClick = function(){
               icon: "./assets/css/images/icon/coordinate.png"
             });
             google.maps.event.addListener(newMark, 'click', function() { 
+                currMarker=newMark.position;
                 addMarkDescription(place.geometry.location.lat, place.geometry.location.lng, markers.length);
             });
             markers.push(newMark);
@@ -221,7 +308,91 @@ $.fn.toggleClick = function(){
 
         //Handles draw click
         $("#draw").click(function(){
-           
+           document.getElementById("map").style.cursor = "pointer";
+           console.log("draw clicked");
+           $('#map-overlay').css("visibility", "visible");
+           $("#map-overlay").click(function(){
+               console.log("sup");
+                var x = (event.clientX);
+                var y=(event.clientY); 
+                var bounds = map.getBounds();
+                var ne = bounds.getNorthEast(); // LatLng of the north-east corner
+                var sw = bounds.getSouthWest(); // LatLng of the south-west corder
+                var map_width=ne.lat()-sw.lat();
+                var map_height=sw.lng()-ne.lng();
+                var pg_height=document.getElementById('map').clientHeight;
+                var pg_width=document.getElementById('map').clientWidth;
+
+                var gestures=[];
+
+                $("#canvas").css("visibility", "visible");
+                //origin x and y in terms of canvas
+                var origin_x= ((currMarker.lat()-sw.lat())/map_width)*canvas.width;
+                var origin_y= ((currMarker.lng()-ne.lng())/map_height)*canvas.height;
+                var lefty=origin_x*(document.getElementById('map-overlay').clientWidth/canvas.width);
+                var toppy=origin_y*(document.getElementById('map-overlay').clientHeight/canvas.height);
+                console.log("toppy"+document.getElementById('map-overlay').clientWidth);
+                console.log("lefty"+document.getElementById('map-overlay').clientHeight);
+                $("#red-dot").css("left",lefty+"px");
+                $("#red-dot").css("top",toppy+"px");
+
+
+                var sup=document.getElementById('map-overlay');//map-overlay
+                var reg=document.getElementById('map-overlay');
+                var canvasRegion = new ZingTouch.Region(reg);
+                //SWIPING
+
+                ctax.clearRect(0, 0, canvas.width, canvas.height);
+                ctax.beginPath();
+                ctax.moveTo(origin_x,origin_y);//origin x and y are in canvas
+                ctax.arc(origin_x,origin_y,20,0,2*Math.PI);
+                ctax.moveTo(origin_x,origin_y);
+                canvasRegion.bind(sup, 'pan', function(e) {
+                    
+                    var dist=e.detail.data[0].distanceFromOrigin;
+                    var dir=e.detail.data[0].directionFromOrigin;
+                    var obj=[dist,dir];
+                    gestures.push(obj);
+                    var x=origin_x+ dist*Math.cos(dir);
+                    var y=origin_y+ dist*Math.sin(dir);
+                    console.log(obj);
+                    console.log("origx"+origin_x);
+                    console.log("x:"+ x + "canvas:" + canvas.width);
+                    console.log("y:"+ y + "canvas:" + canvas.height);
+                    ctax.lineTo(x,y); 
+                    ctax.stroke();
+                });
+               
+/*          
+                for(var i=0; i<gestures.length;i++){
+                    console.log("omg");
+                    var x=origin_x+ gestures[i][0]*Math.cos(gestures[i][1]);
+                    var y=origin_y+ gestures[i][0]*Math.sin(gestures[i][1]);
+                    ctx.lineTo(x,y);     
+                }*/
+                    
+                    /*
+                setOutput([
+                    ['Gesture', 'Swipe'],
+                    ['velocity', Math.floor(e.detail.data[0].velocity) + "px/ms"],
+                    ['currentDirection', Math.floor(e.detail.data[0].currentDirection) + "°"]
+                ]);
+
+                var canvas = document.getElementById('main-canvas');
+                var canvasRect = canvas.getBoundingClientRect();
+                var x = e.detail.events[0].x - canvasRect.left;
+                var y = e.detail.events[0].y - canvasRect.top;
+
+                bubbles[lastIndex].x = (x < 0) ? 0 : (x > canvasRect.width) ? canvasRect.width : x;
+                bubbles[lastIndex].y = (y < 0) ? 0 : (y > canvasRect.height) ? canvasRect.height : y;
+                var theta = Math.sin((Math.PI / 180) * e.detail.data[0].currentDirection);
+                bubbles[lastIndex].vy = -1 * (2 * (e.detail.data[0].velocity * Math.sin((Math.PI / 180) * e.detail.data[0].currentDirection)));
+                bubbles[lastIndex].vx = 2 * (e.detail.data[0].velocity * Math.cos((Math.PI / 180) * e.detail.data[0].currentDirection));*/
+
+                //Identify the nearest 
+
+            });
+
         });
     });
 
